@@ -1,0 +1,79 @@
+#sectors {
+  padding: 120px 5vw;
+  background: var(--black);
+  color: var(--white);
+  position: relative;
+  overflow: hidden;
+}
+#sectors::before {
+  content: '';
+  position: absolute;
+  top: -300px; right: -300px;
+  width: 800px; height: 800px;
+  background: radial-gradient(circle, rgba(67,75,231,0.13) 0%, transparent 65%);
+  pointer-events: none;
+}
+.sectors-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2px;
+  margin-top: 64px;
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.sector-card {
+  padding: 52px 44px;
+  background: rgba(255,255,255,0.03);
+  border-right: 1px solid rgba(255,255,255,0.06);
+  transition: background 0.3s;
+  position: relative;
+  overflow: hidden;
+}
+.sector-card:last-child { border-right: none; }
+.sector-card:hover { background: rgba(67,75,231,0.08); }
+.sector-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--blue), var(--blue-light));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.4s ease;
+}
+.sector-card:hover::before { transform: scaleX(1); }
+.sector-card-icon {
+  font-size: 2.4rem;
+  margin-bottom: 28px;
+  display: block;
+}
+.sector-card-title {
+  font-size: 1.3rem;
+  font-weight: 400;
+  color: var(--white);
+  margin-bottom: 16px;
+  letter-spacing: -0.02em;
+}
+.sector-card-desc {
+  font-size: 0.88rem;
+  color: rgba(255,255,255,0.45);
+  font-weight: 300;
+  line-height: 1.8;
+}
+.sector-card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 24px;
+}
+.sector-tag {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--blue-light);
+  background: rgba(67,75,231,0.15);
+  padding: 4px 10px;
+  border-radius: 100px;
+}

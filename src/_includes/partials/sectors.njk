@@ -1,0 +1,25 @@
+<section id="sectors">
+  <div style="position:relative;z-index:1;">
+    <div class="section-header reveal">
+      <span class="section-eyebrow" style="color:var(--blue-light)">Where we operate</span>
+      <h2 class="section-title section-title-white">Three sectors.<br><em style="color:var(--blue-light)">Deep expertise.</em></h2>
+    </div>
+
+    <div class="sectors-grid reveal">
+      {% for sector in sectors %}
+      <div class="sector-card">
+        <span class="sector-card-icon">{{ sector.icon }}</span>
+        <h3 class="sector-card-title">{{ sector.title }}</h3>
+        <p class="sector-card-desc">
+          {{ sector.description }}
+        </p>
+        <div class="sector-card-tags">
+          {% for tag in sector.tags %}
+          <span class="sector-tag">{{ tag }}</span>
+          {% endfor %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
