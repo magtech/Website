@@ -1,0 +1,10 @@
+<nav id="main-nav">
+  <a href="#hero" class="nav-logo">
+    <svg><use href="#logo-blue"/></svg>
+  </a>
+  <ul class="nav-links">
+    {% for link in site.nav %}
+    <li><a href="{{ link.href }}"{% if link.cta %} class="nav-cta"{% endif %}>{{ link.label }}</a></li>
+    {% endfor %}
+  </ul>
+</nav>

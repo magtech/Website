@@ -1,0 +1,24 @@
+:root {
+  --blue: #434BE7;
+  --blue-dark: #2D34C0;
+  --blue-light: #6B72ED;
+  --blue-faint: #EEF0FD;
+  --black: #0D0D12;
+  --gray-900: #1A1A24;
+  --gray-600: #5A5A72;
+  --gray-300: #C4C4D4;
+  --gray-100: #F4F4F8;
+  --white: #FFFFFF;
+  --radius: 16px;
+  --radius-sm: 8px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--white);
+  color: var(--black);
+  line-height: 1.6;
+  overflow-x: hidden;
+}

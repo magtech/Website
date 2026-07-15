@@ -1,0 +1,11 @@
+<footer>
+  <a href="#hero" class="footer-logo">
+    <svg><use href="#logo-white"/></svg>
+  </a>
+  <ul class="footer-links">
+    {% for link in site.footerLinks %}
+    <li><a href="{{ link.href }}"{% if link.external %} target="_blank" rel="noopener"{% endif %}>{{ link.label }}</a></li>
+    {% endfor %}
+  </ul>
+  <span class="footer-copy">© {{ site.copyrightYear }} {{ site.companyName }}. {{ site.location }}.</span>
+</footer>
