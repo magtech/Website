@@ -6,7 +6,7 @@
 
 **Architecture:** Content that repeats (sectors, services, career-timeline entries) moves into YAML data files under `src/_data/`, rendered by Nunjucks partials under `src/_includes/partials/`. CSS is split one file per existing `/* ── SECTION ── */` divider under `src/assets/css/`, numbered so a plain filename sort gives correct cascade order. Two small Eleventy global-data JS files (`bundledCss.js`, `mainJs.js`) read and concatenate those files at build time, so `dist/index.html` still ships one inlined `<style>` and one inlined `<script>` block, identical in spirit to the current site.
 
-**Tech Stack:** Node.js + npm, `@11ty/eleventy` (only new dependency — justification: it directly targets the two stated pain points, content-as-data and a repeatable build step, without pulling in a client-side framework; see `docs/decisions/2026-07-15-static-site-generator.md`). No other packages — CSS/JS bundling is done with a ~10-line custom Node module rather than an additional plugin dependency.
+**Tech Stack:** Node.js + npm, `@11ty/eleventy` (justification: it directly targets the two stated pain points, content-as-data and a repeatable build step, without pulling in a client-side framework; see `docs/decisions/2026-07-15-static-site-generator.md`), and `js-yaml` (justification: Eleventy 3.x does not recognize `.yaml` files in `_data/` as global data without an explicitly registered parser — `js-yaml` is the same library Eleventy uses internally for front-matter parsing, so this avoids a second YAML implementation; it is present transitively already, this just makes it an explicit, declared dependency). No other packages — CSS/JS bundling is done with a ~10-line custom Node module rather than an additional plugin dependency.
 
 ## Global Constraints
 
@@ -60,7 +60,8 @@
     "build": "eleventy"
   },
   "devDependencies": {
-    "@11ty/eleventy": "^3.0.0"
+    "@11ty/eleventy": "^3.0.0",
+    "js-yaml": "^4.1.0"
   }
 }
 ```
@@ -75,13 +76,16 @@ dist/
 - [ ] **Step 3: Install dependencies**
 
 Run: `npm install`
-Expected: `node_modules/@11ty/eleventy` exists, `package-lock.json` created.
+Expected: `node_modules/@11ty/eleventy` and `node_modules/js-yaml` exist, `package-lock.json` created.
 
 - [ ] **Step 4: Create `.eleventy.js`**
 
 ```js
+const yaml = require("js-yaml");
+
 module.exports = function (eleventyConfig) {
   eleventyConfig.setNunjucksEnvironmentOptions({ autoescape: true });
+  eleventyConfig.addDataExtension("yaml", (contents) => yaml.load(contents));
 
   return {
     dir: {
@@ -1475,13 +1479,13 @@ stats:
       </div>
 
       <p class="about-body reveal">
-        Henrik brings over 20 years of senior leadership experience across space, defence, and telecommunications — not as an outside adviser, but as the person who has held the accountability, managed the teams, and delivered the results. He has led high-technology production sites, managed complex R&D programmes, run department P&Ls, and driven global transformation initiatives across multiple industries and continents.
+        Henrik brings over 20 years of senior leadership experience across space, defence, and telecommunications — not as an outside adviser, but as the person who has held the accountability, managed the teams, and delivered the results. He has led high-technology production sites, managed complex R&amp;D programmes, run department P&amp;Ls, and driven global transformation initiatives across multiple industries and continents.
       </p>
       <p class="about-body reveal" style="margin-top:-20px;">
-        His career spans Production & Site Manager and Senior Project Manager at Unibap Space Solutions, Interim Head of Propulsion at GomSpace — where he was the primary ESA interface across several international programmes — Global Change Driver at Ericsson, and twelve years at FMV (Swedish Defence Materiel Administration) as Project Manager and System Architect on mission-critical communication systems for the Swedish Armed Forces.
+        His career spans Production &amp; Site Manager and Senior Project Manager at Unibap Space Solutions, Interim Head of Propulsion at GomSpace — where he was the primary ESA interface across several international programmes — Global Change Driver at Ericsson, and twelve years at FMV (Swedish Defence Materiel Administration) as Project Manager and System Architect on mission-critical communication systems for the Swedish Armed Forces.
       </p>
       <p class="about-body reveal" style="margin-top:-20px;">
-        Henrik holds an M.Sc. in Computer Science (Communication Systems & Networking) and a Technical Officer and Defence Engineer qualification in Command & Control and Communication Systems. He is fluent in Swedish and English.
+        Henrik holds an M.Sc. in Computer Science (Communication Systems &amp; Networking) and a Technical Officer and Defence Engineer qualification in Command &amp; Control and Communication Systems. He is fluent in Swedish and English.
       </p>
       <div class="about-stats reveal">
         {% for stat in about.stats %}
@@ -1497,7 +1501,7 @@ stats:
 </section>
 ```
 
-Note: the `&` characters above (e.g. `R&D`, `P&Ls`, `Site Manager`, `Command & Control`) render through Nunjucks' `autoescape: true` (set in Task 1's `.eleventy.js`) as `&amp;` in the built HTML, matching the original hand-authored `&amp;` entities. Do not manually write `&amp;` in the `.njk` source — write plain `&` and let autoescape handle it.
+Note: `autoescape: true` (set in Task 1's `.eleventy.js`) only escapes the output of `{{ expression }}` interpolation — it does NOT escape literal text typed directly in `.njk` template source. The `about.stats` loop above renders through `{{ stat.label }}`, so `about.yaml`'s plain `&` (e.g. `"& NASA programme experience"`) is correctly auto-escaped to `&amp;` at render time — write that one as plain `&` in the YAML. But the three static prose paragraphs above are literal template text, not variable output, so their `&amp;` entities must be written out explicitly in the `.njk` source (as shown above) — do not "simplify" them to plain `&`, that would render as a literal, un-escaped `&` character in the output HTML (technically invalid, and inconsistent with the original site's hand-authored `&amp;` entities in the same prose).
 
 - [ ] **Step 6: Add about include to `src/index.njk`**
 
