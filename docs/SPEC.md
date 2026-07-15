@@ -105,9 +105,9 @@ timeline entry by editing a data file, so content changes don't require
 touching markup or styling.
 
 **Acceptance criteria:**
-- [ ] Sectors, services, and timeline entries are defined in
+- [x] Sectors, services, and timeline entries are defined in
       `_data/*.yaml` and rendered via loop templates.
-- [ ] Adding an entry requires no changes to `.njk` templates or CSS.
+- [x] Adding an entry requires no changes to `.njk` templates or CSS.
 
 **Out of scope:** A visual/CMS editing UI — content is edited as
 files by a technical maintainer.
@@ -127,10 +127,10 @@ produce a `dist/` folder I can upload as-is, so deploys are repeatable
 and I stop hand-editing production markup.
 
 **Acceptance criteria:**
-- [ ] `npm run dev` runs a local dev server with live reload.
-- [ ] `npm run build` produces `dist/index.html` (plus any passthrough
+- [x] `npm run dev` runs a local dev server with live reload.
+- [x] `npm run build` produces `dist/index.html` (plus any passthrough
       assets) matching the current site's single-file output profile.
-- [ ] `dist/` is gitignored; only source files are committed.
+- [x] `dist/` is gitignored; only source files are committed.
 
 **Out of scope:** CI/CD, git-triggered auto-deploy (see decision note's
 "Revisit if" — can be added later without a redesign).
@@ -155,7 +155,12 @@ Node dependency once `dist/` is deployed (it's static output).
 
 ## Status
 
-- Migration to Eleventy: not started (this spec is the design; see
-  `docs/decisions/2026-07-15-static-site-generator.md` for the
-  decision, and the implementation plan for execution steps).
-- Current production source: `index.html` (single file, pre-migration).
+- Migration to Eleventy: **complete**. All eight implementation-plan
+  tasks (scaffolding, hero, sectors, services, experience/timeline,
+  about, contact, and final verification/cutover) are done — see
+  `docs/superpowers/plans/2026-07-15-eleventy-migration.md` for the
+  task-by-task history and `docs/decisions/2026-07-15-static-site-generator.md`
+  for the original decision note.
+- Current production source: `src/` (Eleventy site). `npm run build`
+  produces `dist/index.html` for deployment. The legacy single-file
+  `index.html` has been removed from the repository.

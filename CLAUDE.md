@@ -4,26 +4,28 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository overview
 
-This is the marketing website for MAGTECH Sweden AB, a management consulting firm founded by Henrik Magnusson (space/defence/telecom sectors). The entire site is a single static file:
+This is the marketing website for MAGTECH Sweden AB, a management consulting firm founded by Henrik Magnusson (space/defence/telecom sectors). The site is built with [Eleventy (11ty)](https://www.11ty.dev/) as a static site generator: content and markup live under `src/`, and `npm run build` produces a deployable `dist/index.html` that preserves the original single-file, zero-extra-requests performance profile (inlined CSS/JS).
 
-- `index.html` — the whole website: inline `<style>` CSS, inline SVG (logo symbols + about-section illustration), page markup, and a small inline `<script>` at the bottom.
-
-There is no build system, no package manager, no framework, and no test suite — it's a plain static HTML page meant to be deployed as-is (e.g. to any static host). There is no git repository initialized here yet.
+For the full architecture — source layout, build pipeline, design tokens, and feature-level requirements — see [`docs/SPEC.md`](docs/SPEC.md) and the decision note at [`docs/decisions/2026-07-15-static-site-generator.md`](docs/decisions/2026-07-15-static-site-generator.md). The legacy hand-authored `index.html` that predated this migration has been removed; do not recreate it.
 
 ## Working with this file
 
-Because everything lives in one file, changes are made by editing `index.html` directly:
+Source lives under `src/`, not in a single HTML file:
 
-- **CSS** lives in the `<style>` block in `<head>`, organized by section with `/* ── NAME ── */` comment dividers (NAV, HERO, SECTORS, SERVICES, ABOUT, CONTACT, FOOTER, ANIMATIONS, HENRIK CARD, TIMELINE, MOBILE). Design tokens (colors, radii) are CSS custom properties on `:root` — reuse these (`--blue`, `--black`, `--gray-*`, `--radius`, etc.) rather than introducing new hard-coded values.
-- **Fonts** are DM Sans (body) and DM Mono (labels/eyebrows/mono accents), loaded from Google Fonts in the `<head>`.
-- **Sections** run in document order: `nav` → `#hero` → `#sectors` → `#services` → `#experience` (career timeline) → `#about` → `#contact` → `footer`. Nav links and footer links anchor to these section IDs — keep them in sync if section IDs change.
-- **Responsive behavior** is handled by a single `@media (max-width: 900px)` block at the end of the `<style>` section — add mobile overrides there rather than scattering breakpoints throughout.
-- **Scroll-reveal animation**: any element with the `reveal` class fades/slides in via an `IntersectionObserver` in the bottom `<script>`; add the class to new content blocks that should animate in on scroll.
-- **Contact form** posts to Formspree (`https://formspree.io/f/mojbldlz`) via `fetch` in the inline script, with success/error message toggling (`#success-msg` / `#error-msg`) and a hidden `_replyto` field synced from the email input. Fallback contact is `ceo@magtech.se`.
+- `src/_data/*.yaml` — content as data (nav links, contact info, sectors, services, career timeline). Edit these to change content without touching markup.
+- `src/_includes/layouts/base.njk` — shared page shell (head, nav, footer).
+- `src/_includes/partials/*.njk` — one Nunjucks template per page section (hero, sectors, services, experience, about, contact), plus `svg/*.njk` for logo and illustration partials.
+- `src/assets/css/*.css` — one file per section (tokens, nav, hero, sectors, services, about, contact, footer, animations, henrik-card, timeline, mobile), bundled at build time into a single inlined `<style>` block.
+- `src/assets/js/main.js` — scroll-reveal (`IntersectionObserver`), nav shadow-on-scroll, and Formspree contact-form submit handling, bundled into a single inlined `<script>` block.
+
+See `docs/SPEC.md`'s Architecture section for full detail on the build/bundling mechanism and design tokens. Nav/footer links anchor to section IDs (`#hero`, `#sectors`, `#services`, `#experience`, `#about`, `#contact`) — keep them in sync if section IDs change.
 
 ## Testing changes
 
-There is no build/lint/test tooling. Verify changes by opening `index.html` directly in a browser (or via a simple static file server) and checking the affected section, including the mobile breakpoint (<900px) and the scroll-reveal/nav-shadow/form-submit behavior in `<script>`.
+There is no separate lint/test suite. Verify changes with:
+
+- `npm run dev` — starts a local dev server with live reload; check the affected section in the browser, including the mobile breakpoint (<900px, rules in `src/assets/css/99-mobile.css`) and the scroll-reveal/nav-shadow/form-submit behavior.
+- `npm run build` — produces `dist/index.html` (gitignored; not committed). Confirm it builds without errors before considering a change done.
 
 ## Brand note
 
