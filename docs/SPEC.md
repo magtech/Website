@@ -36,11 +36,13 @@ for the full decision note (problem, options considered, trade-offs).
 - `assets/js/main.js` — scroll-reveal (`IntersectionObserver`), nav
   shadow-on-scroll, and Formspree contact-form submit handling.
 
-**Build output**: `@11ty/eleventy-plugin-bundle` inlines the split CSS
-and JS back into a single `<style>` and `<script>` block at build time,
-so `dist/index.html` preserves the original site's "one file, zero
-extra requests" performance profile even though the source is split
-across files.
+**Build output**: two small Eleventy global-data modules
+(`_data/bundledCss.js`, `_data/mainJs.js`) read and concatenate the
+split CSS/JS files at build time and inline them into a single
+`<style>` and `<script>` block, so `dist/index.html` preserves the
+original site's "one file, zero extra requests" performance profile
+even though the source is split across files. No extra plugin
+dependency beyond Eleventy itself is needed for this.
 
 **Design tokens**: colors, radii, etc. remain CSS custom properties on
 `:root` in `assets/css/tokens.css` (`--blue`, `--black`, `--gray-*`,

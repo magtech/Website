@@ -60,7 +60,8 @@ the presence of a build step.
 
 CSS and JS are split into per-section source files for
 maintainability, then re-bundled into a single inlined `<style>` and
-`<script>` at build time (via `@11ty/eleventy-plugin-bundle`), so the
+`<script>` at build time via two small custom Eleventy global-data
+modules (no extra plugin dependency needed for this), so the
 production output keeps the current site's "one file, zero extra
 requests" performance profile.
 
