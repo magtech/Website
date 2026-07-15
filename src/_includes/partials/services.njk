@@ -1,0 +1,18 @@
+<section id="services">
+  <div class="section-header reveal">
+    <span class="section-eyebrow">What we deliver</span>
+    <h2 class="section-title">Four disciplines.<br><em>Proven in the field.</em></h2>
+  </div>
+
+  <div class="services-grid">
+    {% for service in services %}
+    <div class="service-card reveal">
+      <div class="service-icon">{{ service.icon }}</div>
+      <h3 class="service-title">{{ service.title }}</h3>
+      <p class="service-desc">
+        {{ service.description }}
+      </p>
+    </div>
+    {% endfor %}
+  </div>
+</section>
