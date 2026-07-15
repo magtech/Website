@@ -1,0 +1,39 @@
+<section id="hero">
+  <div class="hero-bg"><div class="hero-orb2"></div></div>
+
+  <div class="hero-content">
+    <span class="hero-eyebrow">{{ site.tagline }}</span>
+    <h1 class="hero-title">
+      Senior consulting for<br>
+      <em>mission-critical</em><br>
+      programmes
+    </h1>
+    <p class="hero-sub">
+      MAGTECH is led by Henrik Magnusson — a senior executive with 20+ years of hands-on leadership in space, defence, and telecommunications, including programmes with ESA, NASA, and the Swedish Armed Forces.
+    </p>
+    <div class="hero-actions">
+      <a href="#services" class="btn-primary">
+        Our services
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+      <a href="#contact" class="btn-secondary">Start a conversation</a>
+    </div>
+  </div>
+
+  <div class="hero-sectors">
+    {% for sector in sectors %}
+    <div class="sector-badge">
+      <div class="sector-icon">{{ sector.icon }}</div>
+      <div>
+        <div class="sector-name">{{ sector.name }}</div>
+        <div class="sector-sub">{{ sector.badgeSub }}</div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="scroll-hint">
+    <div class="scroll-line"></div>
+    <span>Scroll</span>
+  </div>
+</section>

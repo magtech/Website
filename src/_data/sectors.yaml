@@ -1,0 +1,30 @@
+- id: defence
+  icon: "🛡️"
+  name: "Defence"
+  badgeSub: "Complex systems & programmes"
+  title: "Defence"
+  description: "Supporting defence programmes that demand rigorous requirements management, verified test processes, and delivery under strict governance. Our consultants understand the operational realities of complex defence systems and the accountability that comes with them."
+  tags:
+    - "Systems acquisition"
+    - "Programme governance"
+    - "Requirements traceability"
+- id: telecom
+  icon: "📡"
+  name: "Telecommunications"
+  badgeSub: "Network & platform delivery"
+  title: "Telecommunications"
+  description: "From network infrastructure rollouts to platform modernisation, MAGTECH supports telecoms organisations managing large-scale technical programmes across multiple stakeholders, suppliers, and regulatory environments."
+  tags:
+    - "Infrastructure delivery"
+    - "Supplier management"
+    - "Network transformation"
+- id: space
+  icon: "🛰️"
+  name: "Space"
+  badgeSub: "Systems engineering & ops"
+  title: "Space"
+  description: "Space programmes are among the most demanding engineering endeavours on earth. We bring structured project management and systems engineering discipline to organisations developing, launching, and operating space-based assets."
+  tags:
+    - "Mission planning"
+    - "Systems engineering"
+    - "Operations readiness"
