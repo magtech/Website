@@ -2,6 +2,7 @@
   padding: 120px 5vw;
   background: var(--gray-100);
 }
+/* Shared across sectors/services/experience/about/contact section headers — not services-specific, don't delete when reworking this section. */
 .section-header { margin-bottom: 64px; }
 .section-eyebrow {
   font-family: 'DM Mono', monospace;
