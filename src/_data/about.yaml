@@ -1,0 +1,16 @@
+label: "Founder & Lead Consultant"
+henrik:
+  initials: "HM"
+  name: "Henrik Magnusson"
+  role: "Founder & Lead Consultant · Uppsala, Sweden"
+  quals: "M.Sc. Computer Science · Technical Officer & Defence Engineer"
+stats:
+  - num: "20"
+    suffix: "+"
+    label: "Years of leadership experience"
+  - num: "ESA"
+    suffix: ""
+    label: "& NASA programme experience"
+  - num: "FMV"
+    suffix: ""
+    label: "Swedish Defence Materiel Administration"

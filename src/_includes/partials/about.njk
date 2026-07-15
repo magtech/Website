@@ -1,0 +1,41 @@
+<section id="about">
+  <div class="about-grid">
+
+    <div class="about-visual reveal">
+      {% include "partials/svg/about-illustration.njk" %}
+    </div>
+
+    <div>
+      <span class="about-label reveal">{{ about.label }}</span>
+      <h2 class="about-title reveal">Henrik Magnusson —<br><em>the person behind MAGTECH</em></h2>
+
+      <div class="henrik-card reveal">
+        <div class="henrik-initials">{{ about.henrik.initials }}</div>
+        <div class="henrik-meta">
+          <span class="henrik-name">{{ about.henrik.name }}</span>
+          <span class="henrik-role">{{ about.henrik.role }}</span>
+          <span class="henrik-quals">{{ about.henrik.quals }}</span>
+        </div>
+      </div>
+
+      <p class="about-body reveal">
+        Henrik brings over 20 years of senior leadership experience across space, defence, and telecommunications — not as an outside adviser, but as the person who has held the accountability, managed the teams, and delivered the results. He has led high-technology production sites, managed complex R&amp;D programmes, run department P&amp;Ls, and driven global transformation initiatives across multiple industries and continents.
+      </p>
+      <p class="about-body reveal" style="margin-top:-20px;">
+        His career spans Production &amp; Site Manager and Senior Project Manager at Unibap Space Solutions, Interim Head of Propulsion at GomSpace — where he was the primary ESA interface across several international programmes — Global Change Driver at Ericsson, and twelve years at FMV (Swedish Defence Materiel Administration) as Project Manager and System Architect on mission-critical communication systems for the Swedish Armed Forces.
+      </p>
+      <p class="about-body reveal" style="margin-top:-20px;">
+        Henrik holds an M.Sc. in Computer Science (Communication Systems &amp; Networking) and a Technical Officer and Defence Engineer qualification in Command &amp; Control and Communication Systems. He is fluent in Swedish and English.
+      </p>
+      <div class="about-stats reveal">
+        {% for stat in about.stats %}
+        <div>
+          <div class="about-stat-num">{{ stat.num }}{% if stat.suffix %}<span>{{ stat.suffix }}</span>{% endif %}</div>
+          <div class="about-stat-label">{{ stat.label }}</div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+  </div>
+</section>

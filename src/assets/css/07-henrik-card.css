@@ -1,0 +1,46 @@
+.henrik-card {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: var(--blue-faint);
+  border: 1px solid rgba(67,75,231,0.15);
+  border-radius: var(--radius-sm);
+  padding: 20px 24px;
+  margin-bottom: 28px;
+}
+.henrik-initials {
+  width: 52px; height: 52px;
+  background: var(--blue);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  flex-shrink: 0;
+}
+.henrik-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.henrik-name {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--black);
+  letter-spacing: -0.01em;
+}
+.henrik-role {
+  font-size: 0.82rem;
+  color: var(--blue);
+  font-weight: 400;
+}
+.henrik-quals {
+  font-size: 0.78rem;
+  color: var(--gray-600);
+  font-weight: 300;
+  font-family: 'DM Mono', monospace;
+  letter-spacing: 0.02em;
+}
