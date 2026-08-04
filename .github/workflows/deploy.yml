@@ -64,20 +64,39 @@ jobs:
         env:
           SFTP_HOST: ${{ secrets.ONECOM_SFTP_HOST }}
           SFTP_USER: ${{ secrets.ONECOM_SFTP_USERNAME }}
-          SFTP_PASS: ${{ secrets.ONECOM_SFTP_PASSWORD }}
+          # sshpass -e reads the password from SSHPASS, keeping it out of the
+          # process list and out of shell argument quoting entirely.
+          SSHPASS: ${{ secrets.ONECOM_SFTP_PASSWORD }}
           KNOWN_HOSTS: ${{ secrets.ONECOM_KNOWN_HOSTS }}
           REMOTE_PATH: ${{ vars.ONECOM_REMOTE_PATH }}
         run: |
           set -euo pipefail
           test -n "$REMOTE_PATH" || { echo "ONECOM_REMOTE_PATH variable is not set"; exit 1; }
+          test -n "$SFTP_HOST" || { echo "ONECOM_SFTP_HOST secret is not set"; exit 1; }
+          test -n "$SFTP_USER" || { echo "ONECOM_SFTP_USERNAME secret is not set"; exit 1; }
+          test -n "$SSHPASS"   || { echo "ONECOM_SFTP_PASSWORD secret is not set"; exit 1; }
+          # A pasted secret with surrounding whitespace looks identical in the
+          # UI but authenticates as a different string.
+          case "$SSHPASS" in
+            [[:space:]]*|*[[:space:]]) echo "ERROR: password secret has leading/trailing whitespace"; exit 1 ;;
+          esac
+          case "$SFTP_USER" in
+            [[:space:]]*|*[[:space:]]) echo "ERROR: username secret has leading/trailing whitespace"; exit 1 ;;
+          esac
           sudo apt-get update -qq && sudo apt-get install -y -qq sshpass
           mkdir -p ~/.ssh
           printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
           chmod 600 ~/.ssh/known_hosts
           # -b - reads commands from stdin in batch mode: aborts on the first
           # error and exits non-zero. A bare heredoc would not fail the step.
-          sshpass -p "$SFTP_PASS" sftp -b - -o StrictHostKeyChecking=yes -P 22 \
-            "$SFTP_USER@$SFTP_HOST" <<EOF
+          # Force password auth: the runner has no keys, and letting ssh try
+          # publickey first can exhaust the server's auth attempt limit.
+          sshpass -e sftp -b - \
+            -o StrictHostKeyChecking=yes \
+            -o PreferredAuthentications=password \
+            -o PubkeyAuthentication=no \
+            -o NumberOfPasswordPrompts=1 \
+            -P 22 "$SFTP_USER@$SFTP_HOST" <<EOF
           put dist/index.html $REMOTE_PATH
           bye
           EOF
