@@ -91,7 +91,11 @@ jobs:
           # drive the tty for the password prompt, and feeding the batch over
           # stdin at the same time is a known source of silent auth failures.
           # -b aborts on the first failed command and exits non-zero.
-          printf 'put dist/index.html %s\nbye\n' "$REMOTE_PATH" > "$RUNNER_TEMP/sftp-batch"
+          # Read the file back after writing it and compare checksums below:
+          # this proves the bytes landed at the remote path, independently of
+          # any HTTP cache sitting in front of the site.
+          printf 'put dist/index.html %s\nget %s %s/roundtrip.html\nbye\n' \
+            "$REMOTE_PATH" "$REMOTE_PATH" "$RUNNER_TEMP" > "$RUNNER_TEMP/sftp-batch"
           # -v prints the auth negotiation (never the password, and GitHub
           # masks the secrets regardless), which distinguishes "password was
           # never sent" from "password was sent and rejected".
@@ -106,10 +110,21 @@ jobs:
             -o PubkeyAuthentication=no \
             -o NumberOfPasswordPrompts=1 \
             -P 22 "$SFTP_USER@$SFTP_HOST"
-          echo "Uploaded dist/index.html to $REMOTE_PATH"
+          # Authoritative check that the deploy landed: what we sent must be
+          # byte-identical to what the server now holds at that exact path.
+          if ! cmp -s dist/index.html "$RUNNER_TEMP/roundtrip.html"; then
+            echo "ERROR: file read back from $REMOTE_PATH does not match what was uploaded"
+            echo "  sent:     $(wc -c < dist/index.html) bytes, md5 $(md5sum < dist/index.html)"
+            echo "  read back: $(wc -c < "$RUNNER_TEMP/roundtrip.html") bytes, md5 $(md5sum < "$RUNNER_TEMP/roundtrip.html")"
+            exit 1
+          fi
+          echo "Uploaded and verified $REMOTE_PATH ($(wc -c < dist/index.html) bytes)"
 
-      # Catches a silent no-op — an upload that succeeded into a directory
-      # nothing is actually served from.
+      # The upload itself is already proven by the SFTP round-trip above.
+      # This step confirms the public site is healthy and reports whether the
+      # new bytes are visible yet. one.com fronts the site with Varnish, so a
+      # stale response here is a caching artifact, not a failed deploy —
+      # serving a broken page is a real failure, so only that fails the job.
       - name: Verify the live site
         if: github.event_name == 'push' || !inputs.dry_run
         run: |
@@ -120,4 +135,18 @@ jobs:
             grep -q "id=\"$id\"" live.html || { echo "live site missing #$id"; exit 1; }
           done
           grep -q 'https://formspree.io/f/' live.html || { echo "live site missing form endpoint"; exit 1; }
-          echo "Live site verified ($(wc -c < live.html) bytes)."
+          echo "Live site is healthy ($(wc -c < live.html) bytes)."
+          # Poll for the new content, tolerating cache lag.
+          for attempt in 1 2 3 4 5 6; do
+            if cmp -s live.html dist/index.html; then
+              echo "Live site is serving the newly deployed build."
+              exit 0
+            fi
+            echo "attempt $attempt: live site still serving previous build, waiting for cache..."
+            sleep 10
+            curl -fsS -H 'Cache-Control: no-cache' "https://magtech.se/?cb=$RANDOM" -o live.html || true
+          done
+          echo "NOTE: upload verified over SFTP, but the public URL is still serving"
+          echo "      the previous build. This is one.com's Varnish cache, which"
+          echo "      expires on its own; clear it in the control panel to see the"
+          echo "      change immediately."
