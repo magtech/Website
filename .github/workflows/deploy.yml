@@ -91,6 +91,35 @@ jobs:
           # drive the tty for the password prompt, and feeding the batch over
           # stdin at the same time is a known source of silent auth failures.
           # -b aborts on the first failed command and exits non-zero.
+          sftp_run() {
+            sshpass -e sftp -v \
+              -o BatchMode=no \
+              -o StrictHostKeyChecking=yes \
+              -o PreferredAuthentications=password \
+              -o PubkeyAuthentication=no \
+              -o NumberOfPasswordPrompts=1 \
+              -b "$1" \
+              -P 22 "$SFTP_USER@$SFTP_HOST"
+          }
+
+          # Pre-flight: whatever currently sits at REMOTE_PATH should be what
+          # the public site serves. When it isn't, REMOTE_PATH points at a file
+          # nobody serves and every deploy silently no-ops -- verifying the
+          # upload cannot catch that, because the upload genuinely succeeds.
+          printf 'get %s %s/remote-before.html\nbye\n' \
+            "$REMOTE_PATH" "$RUNNER_TEMP" > "$RUNNER_TEMP/preflight-batch"
+          if sftp_run "$RUNNER_TEMP/preflight-batch" >/dev/null 2>&1; then
+            curl -fsS -H 'Cache-Control: no-cache' "https://magtech.se/?cb=$RANDOM" \
+              -o "$RUNNER_TEMP/live-before.html" || true
+            if [ -s "$RUNNER_TEMP/live-before.html" ] \
+               && ! cmp -s "$RUNNER_TEMP/remote-before.html" "$RUNNER_TEMP/live-before.html"; then
+              echo "WARNING: the file at $REMOTE_PATH does not match what https://magtech.se/"
+              echo "         is serving. That path may not be the document root. If this"
+              echo "         deploy does not show up on the site, check ONECOM_REMOTE_PATH"
+              echo "         before investigating anything else."
+            fi
+          fi
+
           # Read the file back after writing it and compare checksums below:
           # this proves the bytes landed at the remote path, independently of
           # any HTTP cache sitting in front of the site.
@@ -106,14 +135,7 @@ jobs:
           # having never tried. ssh takes the FIRST value given for an option,
           # so every -o must precede -b to win against sftp's own injected one.
           # Order here is not stylistic; moving -b earlier silently breaks auth.
-          sshpass -e sftp -v \
-            -o BatchMode=no \
-            -o StrictHostKeyChecking=yes \
-            -o PreferredAuthentications=password \
-            -o PubkeyAuthentication=no \
-            -o NumberOfPasswordPrompts=1 \
-            -b "$RUNNER_TEMP/sftp-batch" \
-            -P 22 "$SFTP_USER@$SFTP_HOST"
+          sftp_run "$RUNNER_TEMP/sftp-batch"
           # Authoritative check that the deploy landed: what we sent must be
           # byte-identical to what the server now holds at that exact path.
           if ! cmp -s dist/index.html "$RUNNER_TEMP/roundtrip.html"; then
