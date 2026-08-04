@@ -87,19 +87,20 @@ jobs:
           mkdir -p ~/.ssh
           printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
           chmod 600 ~/.ssh/known_hosts
-          # -b - reads commands from stdin in batch mode: aborts on the first
-          # error and exits non-zero. A bare heredoc would not fail the step.
-          # Force password auth: the runner has no keys, and letting ssh try
-          # publickey first can exhaust the server's auth attempt limit.
-          sshpass -e sftp -b - \
+          # Batch commands go in a file rather than on stdin: sshpass needs to
+          # drive the tty for the password prompt, and feeding the batch over
+          # stdin at the same time is a known source of silent auth failures.
+          # -b aborts on the first failed command and exits non-zero.
+          printf 'put dist/index.html %s\nbye\n' "$REMOTE_PATH" > "$RUNNER_TEMP/sftp-batch"
+          # -v prints the auth negotiation (never the password, and GitHub
+          # masks the secrets regardless), which distinguishes "password was
+          # never sent" from "password was sent and rejected".
+          sshpass -e sftp -v -b "$RUNNER_TEMP/sftp-batch" \
             -o StrictHostKeyChecking=yes \
             -o PreferredAuthentications=password \
             -o PubkeyAuthentication=no \
             -o NumberOfPasswordPrompts=1 \
-            -P 22 "$SFTP_USER@$SFTP_HOST" <<EOF
-          put dist/index.html $REMOTE_PATH
-          bye
-          EOF
+            -P 22 "$SFTP_USER@$SFTP_HOST"
           echo "Uploaded dist/index.html to $REMOTE_PATH"
 
       # Catches a silent no-op — an upload that succeeded into a directory
