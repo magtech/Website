@@ -18,7 +18,7 @@ Source lives under `src/`, not in a single HTML file:
 - `src/assets/css/*.css` — one file per section (tokens, nav, hero, sectors, services, about, contact, footer, animations, henrik-card, timeline, mobile), bundled at build time into a single inlined `<style>` block.
 - `src/assets/js/main.js` — scroll-reveal (`IntersectionObserver`), nav shadow-on-scroll, and Formspree contact-form submit handling, bundled into a single inlined `<script>` block.
 
-See `docs/SPEC.md`'s Architecture section for full detail on the build/bundling mechanism and design tokens. Nav/footer links anchor to section IDs (`#hero`, `#sectors`, `#services`, `#experience`, `#about`, `#contact`) — keep them in sync if section IDs change.
+See `docs/SPEC.md`'s Architecture section for full detail on the build/bundling mechanism and design tokens. Nav/footer links anchor to section IDs (`#hero`, `#sectors`, `#services`, `#experience`, `#about`, `#contact`) — keep them in sync if section IDs change. `scripts/verify-build.mjs` enforces this: it fails the build if a section ID is missing or nothing links to it.
 
 ## Testing changes
 
@@ -26,6 +26,28 @@ There is no separate lint/test suite. Verify changes with:
 
 - `npm run dev` — starts a local dev server with live reload; check the affected section in the browser, including the mobile breakpoint (<900px, rules in `src/assets/css/99-mobile.css`) and the scroll-reveal/nav-shadow/form-submit behavior.
 - `npm run build` — produces `dist/index.html` (gitignored; not committed). Confirm it builds without errors before considering a change done.
+- `npm run verify` — smoke-checks the built file (size, inlined CSS/JS bundles, anchor sync, content markers, no unrendered template syntax). Run it after `npm run build`. CI runs it too, and a failure blocks the deploy.
+
+## Deploying
+
+Deploys are tag-triggered. Pushing a `v*` tag runs `.github/workflows/deploy.yml`, which builds, runs `npm run verify`, uploads `dist/index.html` to one.com over SFTP, and then fetches the live page to confirm it landed. Pushing to `master` publishes nothing.
+
+To release:
+
+```
+npm run build && npm run verify   # then npm run dev and eyeball it, incl. <900px
+# record the change under a new heading in CHANGELOG.md, commit
+npm version minor -m "chore(release): v%s"
+git push --follow-tags
+```
+
+Use `minor` for content/feature changes, `patch` for typo-level fixes. `npm version` refuses to run on a dirty tree.
+
+`workflow_dispatch` on the Deploy workflow gives a build-and-verify dry run (the default) that uploads nothing — use it to rehearse, or re-run a failed upload without cutting a new tag.
+
+Credentials live in GitHub repository secrets (`ONECOM_SFTP_HOST`, `ONECOM_SFTP_USERNAME`, `ONECOM_SFTP_PASSWORD`, `ONECOM_KNOWN_HOSTS`) plus the `ONECOM_REMOTE_PATH` variable. Never inline them in the workflow or any source file. Rotating the one.com SSH/SFTP password means updating `ONECOM_SFTP_PASSWORD`, or deploys will start failing at the upload step.
+
+To roll back, download the `index-html-<sha>` artifact from the last good workflow run and upload it manually.
 
 ## Brand note
 

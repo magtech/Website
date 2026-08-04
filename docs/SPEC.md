@@ -119,24 +119,37 @@ files by a technical maintainer.
 ## Feature: Repeatable build & deploy workflow
 
 **Goal:** Replace hand-editing a single HTML file with a build step
-that produces deployable output, while keeping the existing manual
-upload to a static host.
+that produces deployable output, and publish that output to the one.com
+web space automatically on tagged releases.
 
 **User story:** As the site maintainer, I want `npm run build` to
-produce a `dist/` folder I can upload as-is, so deploys are repeatable
-and I stop hand-editing production markup.
+produce a `dist/` folder that ships to production when I cut a version
+tag, so deploys are repeatable and I stop hand-editing and hand-
+uploading production markup.
 
 **Acceptance criteria:**
 - [x] `npm run dev` runs a local dev server with live reload.
 - [x] `npm run build` produces `dist/index.html` (plus any passthrough
       assets) matching the current site's single-file output profile.
 - [x] `dist/` is gitignored; only source files are committed.
+- [x] `npm run verify` smoke-checks `dist/index.html` (size, inlined
+      CSS/JS bundles, nav/section anchor sync, content markers, no
+      unrendered template syntax).
+- [x] Pushing a `v*` tag builds, verifies and uploads `dist/index.html`
+      to one.com over SFTP, then confirms the live page.
+- [x] `workflow_dispatch` supports a build-and-verify dry run that
+      uploads nothing.
 
-**Out of scope:** CI/CD, git-triggered auto-deploy (see decision note's
-"Revisit if" — can be added later without a redesign).
+**Out of scope:** Staging/preview environments; automated visual or
+accessibility regression testing. The smoke check verifies structure,
+not appearance — a visually broken layout still passes, so the
+`npm run dev` visual check stays a manual release step.
 
-**Platform notes:** Requires Node.js + npm locally to build; no runtime
-Node dependency once `dist/` is deployed (it's static output).
+**Platform notes:** Requires Node.js + npm locally to build; the CI
+build pins Node via `.nvmrc`. No runtime Node dependency once
+`dist/` is deployed (it's static output). `dist/` remains gitignored
+and is produced in CI, never committed — the built artifact of each
+deploy is retained for 90 days by the workflow for rollback.
 
 **Open questions:** None.
 
@@ -164,3 +177,9 @@ Node dependency once `dist/` is deployed (it's static output).
 - Current production source: `src/` (Eleventy site). `npm run build`
   produces `dist/index.html` for deployment. The legacy single-file
   `index.html` has been removed from the repository.
+- Git-triggered deploy: **landed 2026-08-04**. Pushing a `v*` tag runs
+  `.github/workflows/deploy.yml`, which builds, verifies and uploads to
+  one.com over SFTP. See
+  `docs/decisions/2026-08-04-git-triggered-deploy.md`. This supersedes
+  the manual-upload deployment model described in the 2026-07-15
+  decision note.

@@ -76,3 +76,9 @@ requests" performance profile.
   on top.
 - Deploys move from manual upload to git-triggered — add CI on top of
   the existing build step; doesn't require re-architecting.
+
+**Superseded in part** by
+[2026-08-04-git-triggered-deploy.md](2026-08-04-git-triggered-deploy.md):
+the "Revisit if" clause above was acted on, and deploys are no longer
+manual. The rest of this note — the choice of Eleventy and the
+inlined-bundle output profile — still stands.
