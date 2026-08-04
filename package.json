@@ -2,9 +2,14 @@
   "name": "magtech-website",
   "version": "1.0.0",
   "private": true,
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "eleventy --serve",
-    "build": "eleventy"
+    "build": "eleventy",
+    "verify": "node scripts/verify-build.mjs",
+    "release": "npm version minor"
   },
   "devDependencies": {
     "@11ty/eleventy": "^3.0.0",
