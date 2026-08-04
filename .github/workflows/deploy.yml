@@ -95,7 +95,12 @@ jobs:
           # -v prints the auth negotiation (never the password, and GitHub
           # masks the secrets regardless), which distinguishes "password was
           # never sent" from "password was sent and rejected".
+          # BatchMode=no is load-bearing: sftp -b implies BatchMode=yes, which
+          # disables password and keyboard-interactive auth entirely, so ssh
+          # never issues the prompt sshpass is waiting to answer. Without it
+          # the connection fails as "Permission denied" having never tried.
           sshpass -e sftp -v -b "$RUNNER_TEMP/sftp-batch" \
+            -o BatchMode=no \
             -o StrictHostKeyChecking=yes \
             -o PreferredAuthentications=password \
             -o PubkeyAuthentication=no \
