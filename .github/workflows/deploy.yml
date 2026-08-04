@@ -99,16 +99,20 @@ jobs:
           # -v prints the auth negotiation (never the password, and GitHub
           # masks the secrets regardless), which distinguishes "password was
           # never sent" from "password was sent and rejected".
-          # BatchMode=no is load-bearing: sftp -b implies BatchMode=yes, which
-          # disables password and keyboard-interactive auth entirely, so ssh
-          # never issues the prompt sshpass is waiting to answer. Without it
-          # the connection fails as "Permission denied" having never tried.
-          sshpass -e sftp -v -b "$RUNNER_TEMP/sftp-batch" \
+          # BatchMode=no is load-bearing: -b makes sftp append "-obatchmode yes"
+          # to the ssh arguments, and batch mode disables password and
+          # keyboard-interactive auth entirely, so ssh never issues the prompt
+          # sshpass is waiting to answer -- it just reports "Permission denied"
+          # having never tried. ssh takes the FIRST value given for an option,
+          # so every -o must precede -b to win against sftp's own injected one.
+          # Order here is not stylistic; moving -b earlier silently breaks auth.
+          sshpass -e sftp -v \
             -o BatchMode=no \
             -o StrictHostKeyChecking=yes \
             -o PreferredAuthentications=password \
             -o PubkeyAuthentication=no \
             -o NumberOfPasswordPrompts=1 \
+            -b "$RUNNER_TEMP/sftp-batch" \
             -P 22 "$SFTP_USER@$SFTP_HOST"
           # Authoritative check that the deploy landed: what we sent must be
           # byte-identical to what the server now holds at that exact path.
