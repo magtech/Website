@@ -47,6 +47,10 @@ Use `minor` for content/feature changes, `patch` for typo-level fixes. `npm vers
 
 Credentials live in GitHub repository secrets (`ONECOM_SFTP_HOST`, `ONECOM_SFTP_USERNAME`, `ONECOM_SFTP_PASSWORD`, `ONECOM_KNOWN_HOSTS`) plus the `ONECOM_REMOTE_PATH` variable. Never inline them in the workflow or any source file. Rotating the one.com SSH/SFTP password means updating `ONECOM_SFTP_PASSWORD`, or deploys will start failing at the upload step.
 
+The document root for www.magtech.se is `/customers/c/6/e/czxlcw9fj/webroots/www/`, so `ONECOM_REMOTE_PATH` is `/customers/c/6/e/czxlcw9fj/webroots/www/index.html`. Use the absolute path — it does not depend on where SFTP lands. The SFTP account also exposes `public_html/` and an `index.html` in the login directory; **neither is served**, and both contain stale copies. Uploading to them succeeds and changes nothing, which is why the workflow warns when the file at `ONECOM_REMOTE_PATH` differs from what the live site serves.
+
+one.com fronts the site with Varnish, so a correct deploy can take a while to appear publicly. The workflow proves the upload by reading the file back over SFTP; a stale public page after a green run is cache, not failure. Clear it in the one.com control panel to see the change immediately.
+
 To roll back, download the `index-html-<sha>` artifact from the last good workflow run and upload it manually.
 
 ## Brand note
