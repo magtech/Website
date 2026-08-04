@@ -1,0 +1,98 @@
+name: Deploy
+
+# Deploys are deliberate: only a v* tag ships to production.
+# workflow_dispatch exists for the first-deploy rehearsal (dry_run defaults
+# to true) and to re-run a failed upload without cutting a new tag.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Build and verify only — do NOT upload to one.com"
+        type: boolean
+        default: true
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://magtech.se
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: ".nvmrc"
+          cache: "npm"
+
+      - run: npm ci
+
+      - run: npm run build
+
+      - run: npm run verify
+
+      # Rollback source: download this artifact and re-upload if a deploy
+      # goes bad. dist/ is gitignored, so this is the only copy of the
+      # exact bytes that shipped.
+      - name: Archive built index.html
+        uses: actions/upload-artifact@v7
+        with:
+          name: index-html-${{ github.sha }}
+          path: dist/index.html
+          retention-days: 90
+
+      - name: Report dry run
+        if: github.event_name == 'workflow_dispatch' && inputs.dry_run
+        run: |
+          echo "Dry run: build and verification passed. Nothing was uploaded."
+          echo "Re-run with dry_run = false, or push a v* tag, to deploy."
+
+      # one.com plans below Enthusiast have no SSH shell, so rsync/scp are
+      # unavailable — plain SFTP works on every tier. Host key is pinned via
+      # ONECOM_KNOWN_HOSTS rather than blindly trusted.
+      - name: Upload to one.com over SFTP
+        if: github.event_name == 'push' || !inputs.dry_run
+        env:
+          SFTP_HOST: ${{ secrets.ONECOM_SFTP_HOST }}
+          SFTP_USER: ${{ secrets.ONECOM_SFTP_USERNAME }}
+          SFTP_PASS: ${{ secrets.ONECOM_SFTP_PASSWORD }}
+          KNOWN_HOSTS: ${{ secrets.ONECOM_KNOWN_HOSTS }}
+          REMOTE_PATH: ${{ vars.ONECOM_REMOTE_PATH }}
+        run: |
+          set -euo pipefail
+          test -n "$REMOTE_PATH" || { echo "ONECOM_REMOTE_PATH variable is not set"; exit 1; }
+          sudo apt-get update -qq && sudo apt-get install -y -qq sshpass
+          mkdir -p ~/.ssh
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+          # -b - reads commands from stdin in batch mode: aborts on the first
+          # error and exits non-zero. A bare heredoc would not fail the step.
+          sshpass -p "$SFTP_PASS" sftp -b - -o StrictHostKeyChecking=yes -P 22 \
+            "$SFTP_USER@$SFTP_HOST" <<EOF
+          put dist/index.html $REMOTE_PATH
+          bye
+          EOF
+          echo "Uploaded dist/index.html to $REMOTE_PATH"
+
+      # Catches a silent no-op — an upload that succeeded into a directory
+      # nothing is actually served from.
+      - name: Verify the live site
+        if: github.event_name == 'push' || !inputs.dry_run
+        run: |
+          set -euo pipefail
+          curl -fsS --retry 5 --retry-delay 5 --retry-all-errors \
+            -H 'Cache-Control: no-cache' https://magtech.se/ -o live.html
+          for id in hero sectors services experience about contact; do
+            grep -q "id=\"$id\"" live.html || { echo "live site missing #$id"; exit 1; }
+          done
+          grep -q 'https://formspree.io/f/' live.html || { echo "live site missing form endpoint"; exit 1; }
+          echo "Live site verified ($(wc -c < live.html) bytes)."
